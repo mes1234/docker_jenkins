@@ -1,0 +1,23 @@
+FROM jenkins/jenkins:lts
+
+# USER root
+
+# RUN wget --no-check-certificate http://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
+# RUN chmod +x Miniconda3-4.3.31-Linux-x86_64.sh
+
+# ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+# RUN ./Miniconda3-4.3.31-Linux-x86_64.sh -b -p /opt/python
+# RUN chown -R jenkins:jenkins /opt/python
+
+# COPY ./req.txt ./
+
+
+# ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+# ENV PATH="/opt/python/bin:${PATH}"
+# ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+# RUN conda install pip
+# RUN pip install -r req.txt
+# ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+# # USER root
+# USER jenkins
+# RUN env

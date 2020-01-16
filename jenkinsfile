@@ -1,0 +1,92 @@
+pipeline {
+    agent any
+    options {
+        buildDiscarder (logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+    }
+    triggers { pollSCM('*/5 * * * *')}
+    environment {
+        PATH ="$PATH:D\\sonar-scanner-cli-3.3.0.1492\\bin;"
+        PYTHONPATH = "${workspace}\\synedix_core;${workspace}"
+    }
+    stages{
+        stage('Update core') {
+            steps{
+                dir("$(env.WORKSPACE}\\synedix_core"){
+                    git(
+                        url: 'git@github.build.ge.com:ADT/synedix-core.git'
+                        credentialsId:'#######',
+                        branch: "develop"
+                    )
+                }
+            }
+        }
+        stage('Build whl')
+        {
+            when {
+                anyOf {
+                    branch 'develop'
+                }
+            }
+            steps{
+                bat "C:\\ python -m pip wheel ."
+            }
+        }
+        stage('Test'){
+            steps{
+                bat "set ERRORLEVEL=0"
+                bat "python -m pytest\
+                test\
+                --junitxml test/result.xml\
+                --cov=synedix_service/ test\
+                --cov-report xml:${workspace}\\test\\coverage.xml"
+            }
+        }
+        stage('Run sonarscanner')
+        {
+            when {
+                anyOf {
+                    branch 'develop'
+                }
+            }
+            steps{
+                bat "sonar-scanner"
+            }
+        }
+    }
+    post {
+        always{
+            script {
+                if ((BRANCH_NAME == 'develop')){
+                    emailxt (
+                        subject: "Job '${env.JOB_NAME} ${env.BUILD_NUMBER}'",
+                        body: "New build : ${env.BUILD_URL}",
+                        to "witold.kepczynski@gmail.com",
+                        from "synedix@synedix.com"
+                    )
+                    if ({findFiles(glob:'*.whl')[0]}){
+                        archiveArtifacts artifacts: '*.whl',
+                        fingerprint:true
+                    }
+                }
+            }
+            script {
+                if (fileExists('trest\\result.xml'))
+                {
+                    junit "test/result.xml"
+                    step([
+                        $class: 'CoberturaPublisher',
+                        autoUpdateHealth: false,
+                         autoUpdateStability:false,
+                         coberturaReportFile: 'test/coverage.xml',
+                         failUnhealthy: false,
+                         failUnstable: false,
+                         maxNumberOfBuilds:0,
+                         onlyStable: false,
+                         sourceEncoding:'ASCII',
+                         zoomCoverageChart:false])
+                }
+            }
+        }
+    }
+}

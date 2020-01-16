@@ -1,0 +1,1 @@
+docker run --group-add $(stat -c '%g' /var/run/docker.sock) -p 8080:8080 -p 50000:50000 -v /usr/bin/docker:/usr/bin/docker -v /home/witek/CODE/docker/jenkins/jenkins_home:/var/jenkins_home -v /var/run/docker.sock:/var/run/docker.sock  myjenkins3
